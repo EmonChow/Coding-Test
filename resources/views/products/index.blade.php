@@ -6,16 +6,30 @@
         <h1 class="h3 mb-0 text-gray-800">Products</h1>
     </div>
 
+    @if(Session::has('success'))
+<p class="alert {{ Session::get('alert-class', 'alert-info') }}">{{ Session::get('success') }}</p>
+@endif
+
 
     <div class="card">
-        <form action="" method="get" class="card-header">
+        <form action="{{route('product.index')}}" method="get" class="card-header">
             <div class="form-row justify-content-between">
                 <div class="col-md-2">
-                    <input type="text" name="title" placeholder="Product Title" class="form-control">
+                    <input type="text" name="title" placeholder="Product Title" class="form-control" value="{{app('request')->input('title')??''}}">
                 </div>
                 <div class="col-md-2">
                     <select name="variant" id="" class="form-control">
-
+                        <option value="">Select Varient</option>
+                        @php
+                            $variant = app('request')->input('variant')??'';
+                        @endphp
+                        @foreach($variants as $key=>$val)
+                        <optgroup label="{{substr($key,1,-1)}}">
+                            @foreach($val as $v)
+                                <option value="{{$v->id}}" {{$variant==$v->id?"selected":''}}>{{$v->variant}}</option>
+                            @endforeach
+                       </optgroup>
+                        @endforeach
                     </select>
                 </div>
 
@@ -24,12 +38,12 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">Price Range</span>
                         </div>
-                        <input type="text" name="price_from" aria-label="First name" placeholder="From" class="form-control">
-                        <input type="text" name="price_to" aria-label="Last name" placeholder="To" class="form-control">
+                        <input type="text" name="price_from" aria-label="First name" placeholder="From" class="form-control" value="{{app('request')->input('price_from')??''}}">
+                        <input type="text" name="price_to" aria-label="Last name" placeholder="To" class="form-control" value="{{app('request')->input('price_to')??''}}">
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <input type="date" name="date" placeholder="Date" class="form-control">
+                    <input type="date" name="date" placeholder="Date" class="form-control" value="{{app('request')->input('date')??''}}">
                 </div>
                 <div class="col-md-1">
                     <button type="submit" class="btn btn-primary float-right"><i class="fa fa-search"></i></button>
@@ -42,7 +56,7 @@
                 <table class="table">
                     <thead>
                     <tr>
-                        <th>#</th>
+                        <th>SL</th>
                         <th>Title</th>
                         <th>Description</th>
                         <th>Variant</th>
@@ -52,7 +66,41 @@
 
                     <tbody>
 
-                    <tr>
+                       @foreach($products as $product)
+
+                        <tr>
+                            <td>{{$product->id}}</td>
+                           
+                            <td>{{$product->title}} <br>
+                                {{Carbon\Carbon::parse($product->created_at)->diffForHumans()}}
+                            </td>
+                            <td style="max-width: 200px">{{$product->description}}</td>
+                            <td>
+                                @if(isset($product_variants[$product->id]))
+                                @foreach($product_variants[$product->id] as $v)
+                                <p>
+                                    <span>{{$v->variant_one}}</span>
+                                    <span>/</span>
+                                    <span>{{$v->variant_two}}</span>
+                                    <span>/</span>
+                                    <span>{{$v->variant_three}}</span>
+                                    <span style="margin: 0 5px;padding:0 5px;border: 1px solid #ddd">price:{{$v->price}}</span>
+                                    <span style="margin: 0 5px;padding: 0 5px;border: 1px solid #ddd">InStock:{{$v->stock}}</span>
+                                    
+                                </p>
+                                @endforeach
+                                @endif
+
+                            </td>
+                            <td>
+                                <a href="{{route('product.edit',$product->id)}}" class="btn btn-primary">Edit</a>
+                            </td>
+                            
+                        </tr>
+
+                       @endforeach
+
+                    <!-- <tr>
                         <td>1</td>
                         <td>T-Shirt <br> Created at : 25-Aug-2020</td>
                         <td>Quality product in low cost</td>
@@ -76,11 +124,14 @@
                                 <a href="{{ route('product.edit', 1) }}" class="btn btn-success">Edit</a>
                             </div>
                         </td>
-                    </tr>
+                    </tr> -->
 
                     </tbody>
 
                 </table>
+                @if(method_exists($products,'links'))
+                {{ $products->links() }}
+                @endif
             </div>
 
         </div>
@@ -88,7 +139,17 @@
         <div class="card-footer">
             <div class="row justify-content-between">
                 <div class="col-md-6">
-                    <p>Showing 1 to 10 out of 100</p>
+                    <p>
+                        @php
+                        $curPage = app('request')->input('page')??1;
+                        $start = (((int)$curPage-1)*(int)$productper_page)+1;;
+                        $end = (int)$curPage*(int)$productper_page;
+                        $end = $products_count<$end?$products_count:$end;
+                        @endphp
+
+                        Showing {{$start}} to {{$end}} out of
+                        {{$products_count}}
+                    </p>
                 </div>
                 <div class="col-md-2">
 
