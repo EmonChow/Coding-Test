@@ -71,38 +71,34 @@
                         <tr>
                             <td>{{$product->id}}</td>
                            
-                            <td>{{$product->title}} <br>
+                            <td class="col-sm-2">{{$product->title}} <br>
                                 {{Carbon\Carbon::parse($product->created_at)->diffForHumans()}}
                             </td>
-                            <td style="max-width: 200px">{{$product->description}}</td>
+                            <td >{{$product->description}}</td>
                             <td>
-                                @if(isset($product_variants[$product->id]))
-                                @foreach($product_variants[$product->id] as $v)
-         
-                                <p>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <span>{{$v->variant_one}}</span>
+                                
+                                <dl class="row mb-0" style="height: 80px; overflow: hidden" id="variant">
+                                    @if(isset($product_variants[$product->id]))
+                                    @foreach($product_variants[$product->id] as $v)
+                                    <dt class="col-sm-3 pb-0">
+                                        <span>{{$v->variant_one}}</span>
                                             <span>/</span>
                                             <span>{{$v->variant_two}}</span>
                                             <span>/</span>
                                             <span>{{$v->variant_three}}</span>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <span style="margin: 0 5px;padding:0 5px;border: 1px solid #ddd">price:{{$v->price}}</span>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <span style="margin: 0 5px;padding: 0 5px;border: 1px solid #ddd">InStock:{{$v->stock}}</span>
-                                        </div>
-                                    </div>
-                                    
-                                   
-                                    
-                                    
-                                </p>
-                                @endforeach
-                                @endif
-
+                                    </dt>
+                                    <dd class="col-sm-9">
+                                        <dl class="row mb-0">
+                                            <dt class="col-sm-4 pb-0">Price:<span style="margin: 0 5px;padding:0 5px;border: 1px solid #ddd">{{$v->price}}</span></dt>
+                                            <dd class="col-sm-8 pb-0">InStock : <span style="margin: 0 5px;padding: 0 5px;border: 1px solid #ddd">{{$v->stock}}</dd>
+                                        </dl>
+                                    </dd>
+                                    @endforeach
+                                    @endif
+                                </dl>
+                                
+                                
+                                <button onclick="$('#variant').toggleClass('h-auto')" class="btn btn-sm btn-link">Show more</button>
                             </td>
                             <td>
                                 <a href="{{route('product.edit',$product->id)}}" class="btn btn-primary">Edit</a>
