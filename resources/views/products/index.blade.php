@@ -78,14 +78,26 @@
                             <td>
                                 @if(isset($product_variants[$product->id]))
                                 @foreach($product_variants[$product->id] as $v)
+         
                                 <p>
-                                    <span>{{$v->variant_one}}</span>
-                                    <span>/</span>
-                                    <span>{{$v->variant_two}}</span>
-                                    <span>/</span>
-                                    <span>{{$v->variant_three}}</span>
-                                    <span style="margin: 0 5px;padding:0 5px;border: 1px solid #ddd">price:{{$v->price}}</span>
-                                    <span style="margin: 0 5px;padding: 0 5px;border: 1px solid #ddd">InStock:{{$v->stock}}</span>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <span>{{$v->variant_one}}</span>
+                                            <span>/</span>
+                                            <span>{{$v->variant_two}}</span>
+                                            <span>/</span>
+                                            <span>{{$v->variant_three}}</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <span style="margin: 0 5px;padding:0 5px;border: 1px solid #ddd">price:{{$v->price}}</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <span style="margin: 0 5px;padding: 0 5px;border: 1px solid #ddd">InStock:{{$v->stock}}</span>
+                                        </div>
+                                    </div>
+                                    
+                                   
+                                    
                                     
                                 </p>
                                 @endforeach
