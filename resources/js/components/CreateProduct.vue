@@ -7,10 +7,12 @@
                         <div class="form-group">
                             <label for="">Product Name</label>
                             <input type="text" v-model="product_name" placeholder="Product Name" class="form-control">
+                            <p v-if="validation_errors.title" :class="['text-danger']">{{ validation_errors.title[0] }}</p>
                         </div>
                         <div class="form-group">
                             <label for="">Product SKU</label>
                             <input type="text" v-model="product_sku" placeholder="Product Name" class="form-control">
+                            <p v-if="validation_errors.sku" :class="['text-danger']">{{ validation_errors.sku[0] }}</p>
                         </div>
                         <div class="form-group">
                             <label for="">Description</label>
@@ -24,44 +26,15 @@
                         <h6 class="m-0 font-weight-bold text-primary">Media</h6>
                     </div>
                     <div class="card-body border">
-                        <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions"></vue-dropzone>
+                        <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions"  @vdropzone-complete="vdropzone_complete" @vdropzone-removed-file="vdropzone_removed_file"></vue-dropzone>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-6">
                 <div class="card shadow mb-4">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">Variants</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row" v-for="(item,index) in product_variant">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="">Option</label>
-                                    <select v-model="item.option" class="form-control">
-                                        <option v-for="variant in variants"
-                                                :value="variant.id">
-                                            {{ variant.title }}
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-8">
-                                <div class="form-group">
-                                    <label v-if="product_variant.length != 1" @click="product_variant.splice(index,1); checkVariant"
-                                           class="float-right text-primary"
-                                           style="cursor: pointer;">Remove</label>
-                                    <label v-else for="">.</label>
-                                    <input-tag v-model="item.tags" @input="checkVariant" class="form-control"></input-tag>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer" v-if="product_variant.length < variants.length && product_variant.length < 3">
-                        <button @click="newVariant" class="btn btn-primary">Add another option</button>
-                    </div>
-
+                    
+                   
                     <div class="card-header text-uppercase">Preview</div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -71,20 +44,73 @@
                                     <td>Variant</td>
                                     <td>Price</td>
                                     <td>Stock</td>
+                                    <td></td>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr v-for="variant_price in product_variant_prices">
-                                    <td>{{ variant_price.title }}</td>
+                                <tr v-for="(variant_price,index) in product_variant_prices" :key="index">
+                                    <td>
+                                        <div>
+                                            <select v-model="variant_price.variant_id_one">
+                                                <option v-for="variant in variants"
+                                                        :value="variant.id">
+                                                    {{ variant.title }}
+                                                </option>
+                                            </select>
+                                            <select v-model="variant_price.product_variant_one">
+                                                <option v-for="variant_d in variant_details"
+                                                        :value="variant_d.id">
+                                                    {{ variant_d.variant }}
+                                                </option>
+                                            </select>                                            
+                                        </div>
+                                        <br/>
+                                        <div>
+                                            <select v-model="variant_price.variant_id_two">
+                                                <option v-for="variant in variants"
+                                                        :value="variant.id">
+                                                   {{ variant.title }}
+                                                </option>
+                                            </select>
+                                             
+                                            <select v-model="variant_price.product_variant_two">
+                                                <option v-for="variant_d in variant_details"
+                                                        :value="variant_d.id">
+                                                   {{ variant_d.variant }}
+                                                </option>
+                                            </select>  
+                                        </div>
+                                        <br/>
+                                        <div>
+                                            <select v-model="variant_price.variant_id_three">
+                                                <option v-for="variant in variants"
+                                                        :value="variant.id">
+                                                    {{ variant.title }}
+                                                </option>
+                                            </select>
+                                            <select v-model="variant_price.product_variant_three">
+                                                <option v-for="variant_d in variant_details"
+                                                        :value="variant_d.id">
+                                                    {{ variant_d.variant }}
+                                                </option>
+                                            </select>  
+                                        </div>                                       
+                                    </td>
                                     <td>
                                         <input type="text" class="form-control" v-model="variant_price.price">
                                     </td>
                                     <td>
                                         <input type="text" class="form-control" v-model="variant_price.stock">
                                     </td>
+                                    <td>
+                                        <button @click="delVarient(index)">x</button>
+                                    </td>
                                 </tr>
                                 </tbody>
                             </table>
+                            <div>   
+                                <button @click="addVarient" class="btn btn-info">Add Varients</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -107,9 +133,17 @@ export default {
         InputTag
     },
     props: {
+        base_url:{
+            type: String,
+            required: true
+        },
         variants: {
             type: Array,
             required: true
+        },
+         variant_details:{
+            type: Object,
+            required:true
         }
     },
     data() {
@@ -126,14 +160,35 @@ export default {
             ],
             product_variant_prices: [],
             dropzoneOptions: {
-                url: 'https://httpbin.org/post',
+                url: this.base_url.url+'/product-image-upload',
                 thumbnailWidth: 150,
                 maxFilesize: 0.5,
-                headers: {"My-Awesome-Header": "header value"}
-            }
+                headers: {
+                    "X-CSRF-TOKEN": document.head.querySelector("[name=csrf-token]").content
+                },
+                addRemoveLinks: true
+            },
+            validation_errors:[]
         }
     },
     methods: {
+        vdropzone_complete(response) {
+            if(response && response.xhr.response){
+                this.images.push(response.xhr.response)
+            }
+        },
+        vdropzone_removed_file(a,b,c){
+            var image_name = '';
+            if(a.xhr){
+                image_name = a.xhr.response;
+            }else if(a.name){
+                image_name = a.name;
+            }
+            if(image_name){
+                var index = this.images.indexOf(image_name);
+                this.images.splice(index, 1);
+            }
+        },
         // it will push a new object into product variant
         newVariant() {
             let all_variants = this.variants.map(el => el.id)
@@ -187,21 +242,36 @@ export default {
                 product_variant: this.product_variant,
                 product_variant_prices: this.product_variant_prices
             }
-
-
-            axios.post('/product', product).then(response => {
+            axios.post(this.base_url.url+'/product', product).then(response => {
                 console.log(response.data);
+                if(response.data==1){
+                    window.location.href=this.base_url.url+'/product';
+                 }
             }).catch(error => {
-                console.log(error);
+                if(error.response && error.response.data &&  error.response.data.errors){
+                    this.validation_errors = error.response.data.errors
+                }
+                
             })
-
-            console.log(product);
-        }
+        },
+        addVarient(){
+            this.product_variant_prices.push({
+                price: '',
+                product_variant_one: '',
+                product_variant_three: '',
+                product_variant_two: '',
+                stock: '',
+                variant_id_one: '',
+                variant_id_three: '',
+                variant_id_two: ''
+            });
+        },
 
 
     },
     mounted() {
-        console.log('Component mounted.')
+        //console.log('Component mounted.')
+        setTimeout(function(){console.clear()},1000);
     }
 }
 </script>

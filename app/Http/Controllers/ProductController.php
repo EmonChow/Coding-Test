@@ -8,7 +8,7 @@ use App\Models\ProductVariantPrice;
 use App\Models\Variant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Session;
+use Illuminate\Support\Facades\Session;
 
 class ProductController extends Controller
 {
@@ -49,7 +49,19 @@ class ProductController extends Controller
         return view('products.index',$data);
     }
 
+    public function ImageUpload(Request $request)
+    {
+        if($request->file('file')){
+            $imageName = time().rand(1111,9999).'.'.$request->file->getClientOriginalExtension();
+            $request->file->move(public_path('product-images'), $imageName);
+              
+            //return response()->json(['success'=>'We have successfully upload file.']);
 
+            echo $imageName;
+
+
+        }
+    }
 
 
     private function searchProduct(){
@@ -92,6 +104,61 @@ class ProductController extends Controller
         }
         
     }
+    private function PrepareNewVarients($data){
+        $varientData = [];
+        if(
+            (
+                $data['product_variant_one'] ||
+                $data['product_variant_two'] ||
+                $data['product_variant_three']
+            ) && $data['price'] && $data['stock']
+        ){
+
+            $varientData = [
+                'product_variant_one' => $data['product_variant_one'],
+                'product_variant_two' => $data['product_variant_two'],
+                'product_variant_three' => $data['product_variant_three'],
+                'price' => $data['price'],
+                'stock' => $data['stock'],
+                'product_id' => $data['product_id']
+                
+            ];
+        }
+        return $varientData;
+    }
+
+    private function StoreImages($images,$product_id){
+        $get_images = DB::table('product_images')
+        ->where('product_id',$product_id)
+        ->get(); 
+
+        $imageNames = array_column($get_images->toArray(),'file_path'); 
+
+        $deletedImages = [];
+        foreach($get_images as $img){
+            if(!in_array($img->file_path,$images)){
+
+                $deletedImages[] = $img->id;
+            }
+        }
+        if($deletedImages){
+            DB::table('product_images')
+                ->whereIn('id', $deletedImages)
+                ->delete();
+        }
+        
+        $storeImage = [];
+        foreach($images as $image){
+            if(in_array($image,$imageNames)) continue;
+            $storeImage[]=[
+                'product_id' => $product_id,
+                'file_path' => $image
+            ];
+        }
+        if($storeImage){
+            DB::table('product_images')->insert($storeImage);
+        }
+    }
     /**
      * Show the form for creating a new resource.
      *
@@ -100,7 +167,9 @@ class ProductController extends Controller
     public function create()
     {
         $variants = Variant::all();
-        return view('products.create', compact('variants'));
+        $variant_details = DB::table('product_variants')
+        ->get();
+        return view('products.create', compact('variants','variant_details'));
     }
 
     /**
@@ -110,8 +179,39 @@ class ProductController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
-    {
+    { 
+        $validatedData = $request->validate([
+            'title' => 'required|max:255',
+            'sku' => 'required|unique:products'
+        ]);
 
+        $storeProduct = Product::create($request->all());
+
+        if($storeProduct->id){            
+            $varients = [];
+
+            foreach ($request['product_variant_prices'] as $key => $value) {
+                $value['product_id'] = $storeProduct->id;
+                if($varientData = $this->PrepareNewVarients($value))
+                $varients[] = $varientData;
+            }
+            if($varients){
+                DB::table('product_variant_prices')->insert($varients);
+            } 
+            ////
+            $storeImage = [];
+            foreach($request['product_image'] as $image){
+                $storeImage[]=[
+                    'product_id' => $storeProduct->id,
+                    'file_path' => $image
+                ];
+            }
+            if($storeImage){
+                DB::table('product_images')->insert($storeImage);
+            }
+        }
+        if($storeProduct)echo 1;
+        Session::flash('success', 'Data stored successfully');
     }
 
 
