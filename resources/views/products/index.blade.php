@@ -74,7 +74,7 @@
                             <td class="col-sm-2">{{$product->title}} <br>
                                 {{Carbon\Carbon::parse($product->created_at)->diffForHumans()}}
                             </td>
-                            <td >{{$product->description}}</td>
+                            <td class="col-sm-4">{{$product->description}}</td>
                             <td>
                                 
                                 <dl class="row mb-0" style="height: 80px; overflow: hidden" id="variant">
