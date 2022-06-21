@@ -15,7 +15,7 @@
         <form action="{{route('product.index')}}" method="get" class="card-header">
             <div class="form-row justify-content-between">
                 <div class="col-md-2">
-                    <input type="text" name="title" placeholder="Product Title" class="form-control" value="{{app('request')->input('title')??''}}">
+                    <input type="text" name="title" placeholder="Product Title" class="form-control" >
                 </div>
                 <div class="col-md-2">
                     <select name="variant" id="" class="form-control">
@@ -38,12 +38,12 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">Price Range</span>
                         </div>
-                        <input type="text" name="price_from" aria-label="First name" placeholder="From" class="form-control" value="{{app('request')->input('price_from')??''}}">
-                        <input type="text" name="price_to" aria-label="Last name" placeholder="To" class="form-control" value="{{app('request')->input('price_to')??''}}">
+                        <input type="text" name="price_from" aria-label="First name" placeholder="From" class="form-control" >
+                        <input type="text" name="price_to" aria-label="Last name" placeholder="To" class="form-control" >
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <input type="date" name="date" placeholder="Date" class="form-control" value="{{app('request')->input('date')??''}}">
+                    <input type="date" name="date" placeholder="Date" class="form-control" >
                 </div>
                 <div class="col-md-1">
                     <button type="submit" class="btn btn-primary float-right"><i class="fa fa-search"></i></button>
